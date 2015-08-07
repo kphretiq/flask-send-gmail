@@ -40,8 +40,9 @@ class SendGmail(object):
         # if it's satisfying the need for a placeholder. :-)
         # there is no further tidying needed for smtplib, so I think we're good.
 
-    def address_okay(self, addr):
+    def conforming_address(self, addr):
         # TODO decide how picky you want to be, here.
+        # raise ValueError("%s not in recognized email format"%addr)
         return True
 
     def check_inputs(self, obj):
@@ -60,11 +61,10 @@ class SendGmail(object):
             raise ValueError("need at least one of 'text' or 'html' in obj")
 
         # assure email addresses are email addresses
-        for addr in obj["To", "From", "Cc", "Bcc"]:
-            if addr in obj["headers"]:
-                if not self.address_ok(obj["headers"][addr]):
-                    raise ValueError("%s not in recognized email format"%\
-                            obj["headers"][addr])
+        for recpt in obj["To", "From", "Cc", "Bcc"]:
+            if rcpt in obj["headers"]:
+                for addr in obj["headers"][rcpt]:
+                    self.conforming_address(addr)
 
         if len(obj["headers"]["Subject"]) > 130:
             current_app.logger.warning(
@@ -72,13 +72,15 @@ class SendGmail(object):
 
     def send(self, obj):
         """
-        accept obj {dict} Requires "headers" object with minimum:
-            "To" [list]
-            "From" [list]
-            containing one or more well formatted email addresses, and 
-            "Subject" string with a suggested length of <= 130 characters. A
-            longer subject will be truncated by gmail, and we'll be enablers
-            and spit a warning in spite of RFC 2047.
+        accept obj {dict}
+            Requires "headers" object with minimum:
+                "To" [list]
+                "From" [list]
+                containing one or more well formatted email addresses, and 
+                "Subject" string with a suggested length of <= 130 characters.
+                A longer subject will be truncated by gmail, and we'll be
+                enablers and spit a warning in spite of RFC 2047.
+            Requires at least one of "text" or "html" string
 
         {
             headers: {
@@ -140,6 +142,8 @@ class SendGmail(object):
             return False
         return True
 
+    # TODO wrong! /facepalm, sender should be stand-alone class
+    # go to bed
     @property
     def sender(self):
         ctx = stack.top
