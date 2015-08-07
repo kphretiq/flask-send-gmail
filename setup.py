@@ -8,7 +8,7 @@ your gmail account.
 from setuptools import setup
 
 setup(
-    name='Flask-Send-Gmail',
+    name='Flask-SendGmail',
     version='1.0',
     url='https://github.com/kphretiq/flask-send-gmail',
     license='BSD',
